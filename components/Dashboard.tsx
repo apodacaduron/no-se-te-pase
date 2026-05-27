@@ -60,7 +60,7 @@ export function Dashboard() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/auth/callback`,
       },
     });
   }
@@ -299,13 +299,13 @@ export function Dashboard() {
 
       {/* ── FAB ── */}
       {user && (
-        <div className="fixed bottom-6 right-6 z-40">
+        <div className="fixed bottom-6 right-4 z-40">
           <Button
-            size="icon"
-            className="w-14 h-14 rounded-full shadow-lg"
+            className="h-12 rounded-full shadow-lg px-5 gap-2 text-sm font-medium"
             onClick={handleAdd}
           >
-            <Plus className="w-6 h-6" />
+            <Plus className="w-5 h-5" />
+            Agregar recordatorio
           </Button>
         </div>
       )}
