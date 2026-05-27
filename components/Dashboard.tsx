@@ -57,11 +57,10 @@ export function Dashboard() {
 
   async function handleGoogleSignIn() {
     setSigningIn(true);
-    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${origin}/auth/callback`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
       },
     });
   }
