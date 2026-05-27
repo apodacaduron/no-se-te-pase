@@ -94,88 +94,87 @@ export function PaymentCard({
 
   return (
     <div className={`rounded-xl border bg-card p-4 transition-all ${cardClass}`}>
-      <div className="flex items-start justify-between gap-3">
-        {/* Left */}
-        <div className="flex items-start gap-3 min-w-0">
+      {/* Top row: icon + name + menu */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2.5 min-w-0">
           <StatusIcon className={`w-4 h-4 mt-0.5 shrink-0 ${iconClass}`} />
-          <div className="min-w-0 space-y-1.5">
-            <p className="font-medium text-sm leading-tight truncate">
-              {payment.name}
-            </p>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge
-                variant="outline"
-                className={`text-sm gap-1 ${CATEGORY_COLORS[payment.category]}`}
-              >
-                {payment.category === "credit_card" && (
-                  <CreditCard className="w-3 h-3" />
-                )}
-                {CATEGORY_LABELS[payment.category]}
-              </Badge>
-              <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                <Calendar className="w-3 h-3" />
-                {FREQUENCY_LABELS[payment.frequency]}
-              </span>
-              {payment.amount !== null && (
-                <span className="text-sm font-semibold">
-                  ${payment.amount.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
-                </span>
-              )}
-            </div>
-            {payment.category === "credit_card" &&
-              payment.cutoff_day !== null && (
-                <p className="text-sm text-muted-foreground">
-                  Corte: día {payment.cutoff_day} · Límite: día {payment.due_day}
-                </p>
-              )}
-            {payment.notes && (
-              <p className="text-xs text-muted-foreground truncate max-w-50">
-                {payment.notes}
-              </p>
-            )}
-          </div>
+          <p className="font-medium text-sm leading-tight truncate">
+            {payment.name}
+          </p>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={
+            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground -mt-0.5 -mr-1">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          } />
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(payment)}>
+              <Pencil className="w-4 h-4" />
+              Editar
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onDelete(payment.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="w-4 h-4" />
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Right */}
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <span className={`text-sm whitespace-nowrap ${dueClass}`}>
-            {formatDueLabel()}
+      {/* Badges row */}
+      <div className="flex flex-wrap items-center gap-1.5 mt-2 ml-6">
+        <Badge
+          variant="outline"
+          className={`text-sm gap-1 ${CATEGORY_COLORS[payment.category]}`}
+        >
+          {payment.category === "credit_card" && (
+            <CreditCard className="w-3 h-3" />
+          )}
+          {CATEGORY_LABELS[payment.category]}
+        </Badge>
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+          <Calendar className="w-3 h-3" />
+          {FREQUENCY_LABELS[payment.frequency]}
+        </span>
+        {payment.amount !== null && (
+          <span className="text-sm font-semibold">
+            ${payment.amount.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
           </span>
-          <div className="flex items-center gap-1">
-            {!isPaid && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onMarkPaid(payment.id)}
-                className="h-7 text-sm gap-1 px-2 bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Marcar pagado
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger render={
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground">
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              } />
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(payment)}>
-                  <Pencil className="w-4 h-4" />
-                  Editar
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(payment.id)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Eliminar
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+        )}
+      </div>
+
+      {/* Extra info */}
+      {payment.category === "credit_card" && payment.cutoff_day !== null && (
+        <p className="text-sm text-muted-foreground mt-1 ml-6">
+          Corte: día {payment.cutoff_day} · Límite: día {payment.due_day}
+        </p>
+      )}
+      {payment.notes && (
+        <p className="text-sm text-muted-foreground mt-1 ml-6 truncate">
+          {payment.notes}
+        </p>
+      )}
+
+      {/* Bottom row: due date + mark paid */}
+      <div className="flex items-center justify-between mt-3 ml-6">
+        <span className={`text-sm ${dueClass}`}>
+          {formatDueLabel()}
+        </span>
+        {!isPaid && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onMarkPaid(payment.id)}
+            className="h-7 text-sm gap-1 px-2 bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Marcar pagado
+          </Button>
+        )}
       </div>
     </div>
   );

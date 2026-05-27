@@ -6,13 +6,17 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
 
+  console.log("callback hit, code:", code, "origin:", origin);
+
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    console.log("exchange error:", error);
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth`);
+  console.log("no code or error, redirecting to /");
+  return NextResponse.redirect(`${origin}/`);
 }
