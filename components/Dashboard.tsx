@@ -250,7 +250,7 @@ export function Dashboard() {
           <>
             {urgent.length > 0 && (
               <section className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   Atención requerida
                   <span className="bg-destructive text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none normal-case tracking-normal">
                     {urgent.length}
@@ -272,7 +272,7 @@ export function Dashboard() {
 
             {upcoming.length > 0 && (
               <section className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   Próximos pagos
                   <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
                     {upcoming.length}
@@ -298,7 +298,7 @@ export function Dashboard() {
                   onClick={() => setLaterOpen((v) => !v)}
                   className="flex items-center gap-2 w-full text-left"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Más adelante
                   </p>
                   <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
@@ -328,7 +328,7 @@ export function Dashboard() {
                   onClick={() => setPaidOpen((v) => !v)}
                   className="flex items-center gap-2 w-full text-left"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Pagados este ciclo
                   </p>
                   <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">

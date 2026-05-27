@@ -59,6 +59,7 @@
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  font-size: 16px;
 }
 
 :root {

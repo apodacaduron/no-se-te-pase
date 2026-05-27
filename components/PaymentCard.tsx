@@ -71,7 +71,7 @@ export function PaymentCard({
     : isUrgent
     ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20"
     : isPaid
-    ? "opacity-55"
+    ? "opacity-80"
     : "";
 
   const StatusIcon = isPaid ? CheckCircle2 : isOverdue ? AlertCircle : Clock;
@@ -105,26 +105,26 @@ export function PaymentCard({
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge
                 variant="outline"
-                className={`text-xs gap-1 ${CATEGORY_COLORS[payment.category]}`}
+                className={`text-sm gap-1 ${CATEGORY_COLORS[payment.category]}`}
               >
                 {payment.category === "credit_card" && (
                   <CreditCard className="w-3 h-3" />
                 )}
                 {CATEGORY_LABELS[payment.category]}
               </Badge>
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <Calendar className="w-3 h-3" />
                 {FREQUENCY_LABELS[payment.frequency]}
               </span>
               {payment.amount !== null && (
-                <span className="text-xs font-semibold">
+                <span className="text-sm font-semibold">
                   ${payment.amount.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
                 </span>
               )}
             </div>
             {payment.category === "credit_card" &&
               payment.cutoff_day !== null && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Corte: día {payment.cutoff_day} · Límite: día {payment.due_day}
                 </p>
               )}
@@ -138,7 +138,7 @@ export function PaymentCard({
 
         {/* Right */}
         <div className="flex flex-col items-end gap-2 shrink-0">
-          <span className={`text-xs whitespace-nowrap ${dueClass}`}>
+          <span className={`text-sm whitespace-nowrap ${dueClass}`}>
             {formatDueLabel()}
           </span>
           <div className="flex items-center gap-1">
@@ -147,7 +147,7 @@ export function PaymentCard({
                 size="sm"
                 variant="outline"
                 onClick={() => onMarkPaid(payment.id)}
-                className="h-7 text-xs gap-1 px-2 bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                className="h-7 text-sm gap-1 px-2 bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Marcar pagado
