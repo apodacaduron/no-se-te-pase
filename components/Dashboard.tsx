@@ -175,7 +175,7 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* ── Header ── */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b">
+      <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-md border-b border-white/40 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-2">
