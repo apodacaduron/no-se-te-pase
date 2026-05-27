@@ -159,10 +159,12 @@ function rollForward(date: Date, frequency: PaymentFrequency): Date {
 export function sortPayments(payments: PaymentWithStatus[]): {
   urgent: PaymentWithStatus[];
   upcoming: PaymentWithStatus[];
+  later: PaymentWithStatus[];
   paid: PaymentWithStatus[];
 } {
   const urgent: PaymentWithStatus[] = [];
   const upcoming: PaymentWithStatus[] = [];
+  const later: PaymentWithStatus[] = [];
   const paid: PaymentWithStatus[] = [];
 
   for (const p of payments) {
@@ -173,6 +175,8 @@ export function sortPayments(payments: PaymentWithStatus[]): {
       (p.days_until_due !== null && p.days_until_due <= 7)
     ) {
       urgent.push(p);
+    } else if (p.days_until_due !== null && p.days_until_due > 60) {
+      later.push(p);
     } else {
       upcoming.push(p);
     }
@@ -186,6 +190,7 @@ export function sortPayments(payments: PaymentWithStatus[]): {
 
   urgent.sort(byDays);
   upcoming.sort(byDays);
+  later.sort(byDays);
 
-  return { urgent, upcoming, paid };
+  return { urgent, upcoming, later, paid };
 }
