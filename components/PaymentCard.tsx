@@ -147,7 +147,7 @@ export function PaymentCard({
                 size="sm"
                 variant="outline"
                 onClick={() => onMarkPaid(payment.id)}
-                className="h-7 text-xs gap-1 px-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                className="h-7 text-xs gap-1 px-2 bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Marcar pagado
