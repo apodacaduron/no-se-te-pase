@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   PaymentWithStatus,
   CATEGORY_LABELS,
@@ -15,6 +16,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   CheckCircle2,
   AlertCircle,
@@ -39,6 +50,7 @@ export function PaymentCard({
   onMarkPaid,
   onDelete,
 }: PaymentCardProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const isPaid = payment.status === "paid";
   const isOverdue = payment.status === "overdue";
   const isUrgent =
@@ -66,45 +78,50 @@ export function PaymentCard({
     return `${prefix}${d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
   }
 
+  // Card container styles
   const cardClass = isOverdue
-    ? "border-destructive/30 bg-destructive/5"
+    ? "border-red-200 bg-red-50/70 shadow-sm shadow-red-100"
     : isUrgent
-    ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20"
+    ? "border-amber-200 bg-amber-50/80 shadow-sm shadow-amber-100"
     : isPaid
-    ? "opacity-80"
-    : "";
+    ? "border-border bg-card opacity-60"
+    : "border-border bg-card shadow-sm hover:shadow-md transition-shadow";
 
-  const StatusIcon = isPaid ? CheckCircle2 : isOverdue ? AlertCircle : Clock;
+  const StatusIcon = isPaid
+    ? CheckCircle2
+    : isOverdue
+    ? AlertCircle
+    : Clock;
 
   const iconClass = isPaid
-    ? "text-emerald-500"
+    ? "text-emerald-400"
     : isOverdue
-    ? "text-destructive"
+    ? "text-red-500"
     : isUrgent
     ? "text-amber-500"
-    : "text-muted-foreground";
+    : "text-slate-400";
 
   const dueClass = isPaid
-    ? "text-emerald-600"
+    ? "text-emerald-600 font-medium"
     : isOverdue
-    ? "text-destructive font-semibold"
+    ? "text-red-600 font-semibold"
     : isUrgent
-    ? "text-amber-600 font-medium"
+    ? "text-amber-600 font-semibold"
     : "text-muted-foreground";
 
   return (
-    <div className={`rounded-xl border bg-card p-4 transition-all ${cardClass}`}>
+    <div className={`rounded-2xl border p-4 transition-all ${cardClass}`}>
       {/* Top row: icon + name + menu */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2.5 min-w-0">
           <StatusIcon className={`w-4 h-4 mt-0.5 shrink-0 ${iconClass}`} />
-          <p className="font-medium text-sm leading-tight truncate">
+          <p className={`font-semibold text-sm leading-tight truncate ${isPaid ? "text-muted-foreground" : "text-foreground"}`}>
             {payment.name}
           </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger render={
-            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground -mt-0.5 -mr-1">
+            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground/60 hover:text-muted-foreground -mt-0.5 -mr-1">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           } />
@@ -115,7 +132,7 @@ export function PaymentCard({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => onDelete(payment.id)}
+              onClick={() => setConfirmOpen(true)}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="w-4 h-4" />
@@ -129,19 +146,19 @@ export function PaymentCard({
       <div className="flex flex-wrap items-center gap-1.5 mt-2 ml-6">
         <Badge
           variant="outline"
-          className={`text-sm gap-1 ${CATEGORY_COLORS[payment.category]}`}
+          className={`text-xs gap-1 px-2 py-0.5 rounded-full ${CATEGORY_COLORS[payment.category]}`}
         >
           {payment.category === "credit_card" && (
             <CreditCard className="w-3 h-3" />
           )}
           {CATEGORY_LABELS[payment.category]}
         </Badge>
-        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
           <Calendar className="w-3 h-3" />
           {FREQUENCY_LABELS[payment.frequency]}
         </span>
         {payment.amount !== null && (
-          <span className="text-sm font-semibold">
+          <span className="text-sm font-bold text-foreground ml-0.5">
             ${payment.amount.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
           </span>
         )}
@@ -149,12 +166,12 @@ export function PaymentCard({
 
       {/* Extra info */}
       {payment.category === "credit_card" && payment.cutoff_day !== null && (
-        <p className="text-sm text-muted-foreground mt-1 ml-6">
+        <p className="text-xs text-muted-foreground mt-1.5 ml-6">
           Corte: día {payment.cutoff_day} · Límite: día {payment.due_day}
         </p>
       )}
       {payment.notes && (
-        <p className="text-sm text-muted-foreground mt-1 ml-6 truncate">
+        <p className="text-xs text-muted-foreground mt-1 ml-6 truncate">
           {payment.notes}
         </p>
       )}
@@ -169,13 +186,35 @@ export function PaymentCard({
             size="sm"
             variant="outline"
             onClick={() => onMarkPaid(payment.id)}
-            className="h-7 text-sm gap-1 px-2 bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+            className="h-7 text-xs gap-1.5 px-2.5 rounded-full bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-800 font-medium"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             Marcar pagado
           </Button>
         )}
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este recordatorio?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará{" "}
+              <span className="font-medium text-foreground">{payment.name}</span>{" "}
+              permanentemente. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDelete(payment.id)}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

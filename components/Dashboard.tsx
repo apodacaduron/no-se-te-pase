@@ -249,13 +249,15 @@ export function Dashboard() {
         ) : (
           <>
             {urgent.length > 0 && (
-              <section className="space-y-2">
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                  Atención requerida
-                  <span className="bg-destructive text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none normal-case tracking-normal">
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-bold text-red-500 uppercase tracking-widest">
+                    Atención requerida
+                  </p>
+                  <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
                     {urgent.length}
                   </span>
-                </p>
+                </div>
                 <div className="space-y-2">
                   {urgent.map((p) => (
                     <PaymentCard
@@ -271,13 +273,15 @@ export function Dashboard() {
             )}
 
             {upcoming.length > 0 && (
-              <section className="space-y-2">
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                  Próximos pagos
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    Próximos pagos
+                  </p>
                   <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
                     {upcoming.length}
                   </span>
-                </p>
+                </div>
                 <div className="space-y-2">
                   {upcoming.map((p) => (
                     <PaymentCard
@@ -293,12 +297,12 @@ export function Dashboard() {
             )}
 
             {later.length > 0 && (
-              <section className="space-y-2">
+              <section className="space-y-3">
                 <button
                   onClick={() => setLaterOpen((v) => !v)}
-                  className="flex items-center gap-2 w-full text-left"
+                  className="flex items-center gap-2 w-full text-left group"
                 >
-                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
                     Más adelante
                   </p>
                   <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
@@ -323,12 +327,12 @@ export function Dashboard() {
             )}
 
             {paid.length > 0 && (
-              <section className="space-y-2">
+              <section className="space-y-3">
                 <button
                   onClick={() => setPaidOpen((v) => !v)}
-                  className="flex items-center gap-2 w-full text-left"
+                  className="flex items-center gap-2 w-full text-left group"
                 >
-                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
                     Pagados este ciclo
                   </p>
                   <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">

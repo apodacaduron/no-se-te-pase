@@ -64,9 +64,9 @@ export const FREQUENCY_LABELS: Record<PaymentFrequency, string> = {
 };
 
 export const CATEGORY_COLORS: Record<PaymentCategory, string> = {
-  credit_card: "bg-violet-100 text-violet-700 border-violet-200",
-  insurance: "bg-blue-100 text-blue-700 border-blue-200",
-  utility: "bg-cyan-100 text-cyan-700 border-cyan-200",
-  subscription: "bg-orange-100 text-orange-700 border-orange-200",
-  other: "bg-zinc-100 text-zinc-700 border-zinc-200",
+  credit_card: "bg-violet-50 text-violet-600 border-violet-200 font-medium",
+  insurance: "bg-sky-50 text-sky-600 border-sky-200 font-medium",
+  utility: "bg-teal-50 text-teal-600 border-teal-200 font-medium",
+  subscription: "bg-orange-50 text-orange-600 border-orange-200 font-medium",
+  other: "bg-slate-100 text-slate-500 border-slate-200",
 };
