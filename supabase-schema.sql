@@ -23,6 +23,8 @@ create table if not exists public.payments (
 
   -- Status tracking
   last_paid_date date,
+  is_approximate boolean not null default false,
+  attention_after_cutoff boolean not null default false,
   notes          text,
 
   created_at    timestamptz not null default now(),

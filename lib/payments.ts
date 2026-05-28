@@ -51,12 +51,43 @@ export function computePaymentStatus(payment: Payment): PaymentWithStatus {
     }
   }
 
+  const requiresAttention =
+    status !== "paid" &&
+    payment.category === "credit_card" &&
+    payment.attention_after_cutoff &&
+    payment.cutoff_day !== null &&
+    payment.due_day !== null &&
+    nextDue !== null &&
+    hasReachedCutoffForDueCycle(today, nextDue, payment.cutoff_day, payment.due_day);
+
   return {
     ...payment,
     status,
     days_until_due: daysUntilDue,
     computed_next_due: nextDue ? nextDue.toISOString().split("T")[0] : null,
+    requires_attention: requiresAttention,
   };
+}
+
+function hasReachedCutoffForDueCycle(
+  today: Date,
+  nextDue: Date,
+  cutoffDay: number,
+  dueDay: number
+): boolean {
+  const cutoffMonth = cutoffDay > dueDay ? nextDue.getMonth() - 1 : nextDue.getMonth();
+  const cutoffDate = dateInMonthWithClampedDay(
+    nextDue.getFullYear(),
+    cutoffMonth,
+    cutoffDay
+  );
+
+  return today >= cutoffDate && today <= nextDue;
+}
+
+function dateInMonthWithClampedDay(year: number, month: number, day: number): Date {
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, lastDayOfMonth));
 }
 
 function nextOccurrenceOfDayWithFrequency(
@@ -172,6 +203,7 @@ export function sortPayments(payments: PaymentWithStatus[]): {
       paid.push(p);
     } else if (
       p.status === "overdue" ||
+      p.requires_attention ||
       (p.days_until_due !== null && p.days_until_due <= 7)
     ) {
       urgent.push(p);

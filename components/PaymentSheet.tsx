@@ -43,6 +43,7 @@ const EMPTY: PaymentFormData = {
   next_due_date: null,
   last_paid_date: null,
   is_approximate: false,
+  attention_after_cutoff: false,
   notes: null,
 };
 
@@ -77,6 +78,7 @@ export function PaymentSheet({
               next_due_date: payment.next_due_date,
               last_paid_date: payment.last_paid_date,
               is_approximate: payment.is_approximate,
+              attention_after_cutoff: payment.attention_after_cutoff,
               notes: payment.notes,
             }
           : EMPTY
@@ -195,35 +197,48 @@ export function PaymentSheet({
 
           {/* Fecha según tipo */}
           {isCreditCard ? (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="cutoff">Día de corte</Label>
-                <Input
-                  id="cutoff"
-                  type="number"
-                  min="1"
-                  max="31"
-                  placeholder="15"
-                  value={form.cutoff_day ?? ""}
-                  onChange={(e) =>
-                    set("cutoff_day", e.target.value ? parseInt(e.target.value) : null)
-                  }
-                />
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cutoff">Día de corte</Label>
+                  <Input
+                    id="cutoff"
+                    type="number"
+                    min="1"
+                    max="31"
+                    placeholder="15"
+                    value={form.cutoff_day ?? ""}
+                    onChange={(e) =>
+                      set("cutoff_day", e.target.value ? parseInt(e.target.value) : null)
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="due">Día límite de pago</Label>
+                  <Input
+                    id="due"
+                    type="number"
+                    min="1"
+                    max="31"
+                    placeholder="5"
+                    value={form.due_day ?? ""}
+                    onChange={(e) =>
+                      set("due_day", e.target.value ? parseInt(e.target.value) : null)
+                    }
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="due">Día límite de pago</Label>
-                <Input
-                  id="due"
-                  type="number"
-                  min="1"
-                  max="31"
-                  placeholder="5"
-                  value={form.due_day ?? ""}
-                  onChange={(e) =>
-                    set("due_day", e.target.value ? parseInt(e.target.value) : null)
-                  }
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.attention_after_cutoff}
+                  onChange={(e) => set("attention_after_cutoff", e.target.checked)}
+                  className="w-4 h-4 rounded accent-primary"
                 />
-              </div>
+                <span className="text-sm text-muted-foreground">
+                  Enviar a atención requerida desde el día de corte
+                </span>
+              </label>
             </div>
           ) : useDayInput ? (
             <div className="space-y-3">

@@ -54,7 +54,9 @@ export function PaymentCard({
   const isPaid = payment.status === "paid";
   const isOverdue = payment.status === "overdue";
   const isUrgent =
-    !isPaid && payment.days_until_due !== null && payment.days_until_due <= 7;
+    !isPaid &&
+    (payment.requires_attention ||
+      (payment.days_until_due !== null && payment.days_until_due <= 7));
 
   function formatDueLabel(): string {
     if (!payment.computed_next_due) return "Sin fecha";
@@ -74,6 +76,9 @@ export function PaymentCard({
     if (payment.days_until_due !== null && payment.days_until_due <= 7)
       return `Vence en ${payment.days_until_due} días`;
     const d = new Date(payment.computed_next_due + "T00:00:00");
+    if (payment.requires_attention) {
+      return `Corte listo · vence el ${d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
+    }
     const prefix = payment.is_approximate ? "~" : "Vence el ";
     return `${prefix}${d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
   }

@@ -33,6 +33,7 @@ export interface Payment {
   // Status
   last_paid_date: string | null;
   is_approximate: boolean;
+  attention_after_cutoff: boolean;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -42,6 +43,7 @@ export interface PaymentWithStatus extends Payment {
   status: PaymentStatus;
   days_until_due: number | null;
   computed_next_due: string | null; // computed ISO date
+  requires_attention: boolean;
 }
 
 export const CATEGORY_LABELS: Record<PaymentCategory, string> = {
