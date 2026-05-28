@@ -51,8 +51,13 @@ export function computePaymentStatus(payment: Payment): PaymentWithStatus {
     }
   }
 
+  if (payment.is_paused) {
+    status = "paused";
+  }
+
   const requiresAttention =
     status !== "paid" &&
+    status !== "paused" &&
     payment.category === "credit_card" &&
     payment.attention_after_cutoff &&
     payment.cutoff_day !== null &&
@@ -192,14 +197,18 @@ export function sortPayments(payments: PaymentWithStatus[]): {
   upcoming: PaymentWithStatus[];
   later: PaymentWithStatus[];
   paid: PaymentWithStatus[];
+  paused: PaymentWithStatus[];
 } {
   const urgent: PaymentWithStatus[] = [];
   const upcoming: PaymentWithStatus[] = [];
   const later: PaymentWithStatus[] = [];
   const paid: PaymentWithStatus[] = [];
+  const paused: PaymentWithStatus[] = [];
 
   for (const p of payments) {
-    if (p.status === "paid") {
+    if (p.status === "paused") {
+      paused.push(p);
+    } else if (p.status === "paid") {
       paid.push(p);
     } else if (
       p.status === "overdue" ||
@@ -224,5 +233,5 @@ export function sortPayments(payments: PaymentWithStatus[]): {
   upcoming.sort(byDays);
   later.sort(byDays);
 
-  return { urgent, upcoming, later, paid };
+  return { urgent, upcoming, later, paid, paused };
 }

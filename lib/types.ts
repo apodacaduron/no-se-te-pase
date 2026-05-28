@@ -15,7 +15,7 @@ export type PaymentFrequency =
   | "annual"
   | "custom";
 
-export type PaymentStatus = "pending" | "paid" | "overdue";
+export type PaymentStatus = "pending" | "paid" | "overdue" | "paused";
 
 export interface Payment {
   id: string;
@@ -32,6 +32,8 @@ export interface Payment {
   next_due_date: string | null; // ISO date
   // Status
   last_paid_date: string | null;
+  last_paid_amount: number | null;
+  is_paused: boolean;
   is_approximate: boolean;
   attention_after_cutoff: boolean;
   notes: string | null;
@@ -44,6 +46,15 @@ export interface PaymentWithStatus extends Payment {
   days_until_due: number | null;
   computed_next_due: string | null; // computed ISO date
   requires_attention: boolean;
+}
+
+export interface PaymentHistory {
+  id: string;
+  payment_id: string;
+  user_id: string;
+  paid_date: string;
+  amount: number | null;
+  created_at: string;
 }
 
 export const CATEGORY_LABELS: Record<PaymentCategory, string> = {

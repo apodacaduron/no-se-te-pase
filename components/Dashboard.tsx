@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Payment, PaymentWithStatus } from "@/lib/types";
+import { Payment, PaymentHistory, PaymentWithStatus } from "@/lib/types";
 import { computePaymentStatus, sortPayments } from "@/lib/payments";
 import { PaymentCard } from "./PaymentCard";
+import { PaymentSummaryDialog } from "./PaymentSummaryDialog";
 import { PaymentSheet } from "./PaymentSheet";
 import { Landing } from "./Landing";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { Plus, LogOut, Heart, Loader2, ChevronDown } from "lucide-react";
+import { Plus, LogOut, Heart, Loader2, ChevronDown, BarChart3 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 type PaymentFormData = Omit<Payment, "id" | "user_id" | "created_at" | "updated_at">;
@@ -34,6 +35,9 @@ export function Dashboard() {
   const [payments, setPayments] = useState<PaymentWithStatus[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryHistory, setSummaryHistory] = useState<PaymentHistory[]>([]);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
   // ── Auth ──────────────────────────────────────────────
@@ -100,11 +104,85 @@ export function Dashboard() {
     await fetchPayments();
   }
 
-  async function handleMarkPaid(id: string) {
+  async function handleMarkPaid(id: string, amount: number | null) {
     const today = new Date().toISOString().split("T")[0];
     await supabase
       .from("payments")
-      .update({ last_paid_date: today, updated_at: new Date().toISOString() })
+      .update({
+        last_paid_date: today,
+        last_paid_amount: amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    await supabase.from("payment_history").insert({
+      payment_id: id,
+      user_id: user!.id,
+      paid_date: today,
+      amount,
+    });
+
+    await fetchPayments();
+  }
+
+  async function handleLoadHistory(id: string): Promise<PaymentHistory[]> {
+    const { data, error } = await supabase
+      .from("payment_history")
+      .select("*")
+      .eq("payment_id", id)
+      .order("paid_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error || !data) return [];
+    return data as PaymentHistory[];
+  }
+
+  async function handleOpenSummary() {
+    setSummaryOpen(true);
+    setSummaryLoading(true);
+    const { data, error } = await supabase
+      .from("payment_history")
+      .select("*")
+      .order("paid_date", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (!error && data) {
+      setSummaryHistory(data as PaymentHistory[]);
+    }
+    setSummaryLoading(false);
+  }
+
+  async function handleAddHistory(
+    payment: PaymentWithStatus,
+    paidDate: string,
+    amount: number | null
+  ): Promise<PaymentHistory[]> {
+    await supabase.from("payment_history").insert({
+      payment_id: payment.id,
+      user_id: user!.id,
+      paid_date: paidDate,
+      amount,
+    });
+
+    if (!payment.last_paid_date || paidDate >= payment.last_paid_date) {
+      await supabase
+        .from("payments")
+        .update({
+          last_paid_date: paidDate,
+          last_paid_amount: amount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", payment.id);
+      await fetchPayments();
+    }
+
+    return handleLoadHistory(payment.id);
+  }
+
+  async function handleTogglePaused(id: string, isPaused: boolean) {
+    await supabase
+      .from("payments")
+      .update({ is_paused: !isPaused, updated_at: new Date().toISOString() })
       .eq("id", id);
     await fetchPayments();
   }
@@ -124,9 +202,10 @@ export function Dashboard() {
     setSheetOpen(true);
   }
 
-  const { urgent, upcoming, later, paid } = sortPayments(payments);
+  const { urgent, upcoming, later, paid, paused } = sortPayments(payments);
   const [laterOpen, setLaterOpen] = useState(false);
   const [paidOpen, setPaidOpen] = useState(false);
+  const [pausedOpen, setPausedOpen] = useState(false);
   const overdueCount = payments.filter((p) => p.status === "overdue").length;
 
   // ── Render ────────────────────────────────────────────
@@ -190,6 +269,16 @@ export function Dashboard() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleOpenSummary}
+              className="text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-xs">Resumen</span>
+            </Button>
+            <Separator orientation="vertical" className="h-5" />
             <a
               href="https://paypal.me/apodacaduron"
               target="_blank"
@@ -265,6 +354,9 @@ export function Dashboard() {
                       payment={p}
                       onEdit={handleEdit}
                       onMarkPaid={handleMarkPaid}
+                      onLoadHistory={handleLoadHistory}
+                      onAddHistory={handleAddHistory}
+                      onTogglePaused={handleTogglePaused}
                       onDelete={handleDelete}
                     />
                   ))}
@@ -289,6 +381,9 @@ export function Dashboard() {
                       payment={p}
                       onEdit={handleEdit}
                       onMarkPaid={handleMarkPaid}
+                      onLoadHistory={handleLoadHistory}
+                      onAddHistory={handleAddHistory}
+                      onTogglePaused={handleTogglePaused}
                       onDelete={handleDelete}
                     />
                   ))}
@@ -318,6 +413,9 @@ export function Dashboard() {
                         payment={p}
                         onEdit={handleEdit}
                         onMarkPaid={handleMarkPaid}
+                        onLoadHistory={handleLoadHistory}
+                        onAddHistory={handleAddHistory}
+                        onTogglePaused={handleTogglePaused}
                         onDelete={handleDelete}
                       />
                     ))}
@@ -348,6 +446,42 @@ export function Dashboard() {
                         payment={p}
                         onEdit={handleEdit}
                         onMarkPaid={handleMarkPaid}
+                        onLoadHistory={handleLoadHistory}
+                        onAddHistory={handleAddHistory}
+                        onTogglePaused={handleTogglePaused}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {paused.length > 0 && (
+              <section className="space-y-3">
+                <button
+                  onClick={() => setPausedOpen((v) => !v)}
+                  className="flex items-center gap-2 w-full text-left group"
+                >
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
+                    Pausados
+                  </p>
+                  <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
+                    {paused.length}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ml-auto ${pausedOpen ? "rotate-180" : ""}`} />
+                </button>
+                {pausedOpen && (
+                  <div className="space-y-2">
+                    {paused.map((p) => (
+                      <PaymentCard
+                        key={p.id}
+                        payment={p}
+                        onEdit={handleEdit}
+                        onMarkPaid={handleMarkPaid}
+                        onLoadHistory={handleLoadHistory}
+                        onAddHistory={handleAddHistory}
+                        onTogglePaused={handleTogglePaused}
                         onDelete={handleDelete}
                       />
                     ))}
@@ -416,6 +550,13 @@ export function Dashboard() {
         payment={editingPayment}
         onClose={() => setSheetOpen(false)}
         onSave={handleSave}
+      />
+      <PaymentSummaryDialog
+        open={summaryOpen}
+        onOpenChange={setSummaryOpen}
+        history={summaryHistory}
+        payments={payments}
+        loading={summaryLoading}
       />
     </div>
   );

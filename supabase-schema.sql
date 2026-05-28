@@ -23,6 +23,8 @@ create table if not exists public.payments (
 
   -- Status tracking
   last_paid_date date,
+  last_paid_amount numeric(12, 2),
+  is_paused boolean not null default false,
   is_approximate boolean not null default false,
   attention_after_cutoff boolean not null default false,
   notes          text,
@@ -48,6 +50,38 @@ create policy "Users can update their own payments"
 
 create policy "Users can delete their own payments"
   on public.payments for delete
+  using (auth.uid() = user_id);
+
+-- Payment history: cada pago marcado queda registrado
+create table if not exists public.payment_history (
+  id         uuid primary key default gen_random_uuid(),
+  payment_id uuid not null references public.payments(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  paid_date  date not null,
+  amount     numeric(12, 2),
+  created_at timestamptz not null default now()
+);
+
+alter table public.payment_history enable row level security;
+
+create policy "Users can view their own payment history"
+  on public.payment_history for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own payment history"
+  on public.payment_history for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.payments
+      where payments.id = payment_history.payment_id
+        and payments.user_id = auth.uid()
+    )
+  );
+
+create policy "Users can delete their own payment history"
+  on public.payment_history for delete
   using (auth.uid() = user_id);
 
 -- Auto-update updated_at
