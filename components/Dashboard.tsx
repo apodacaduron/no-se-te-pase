@@ -179,6 +179,35 @@ export function Dashboard() {
     return handleLoadHistory(payment.id);
   }
 
+  async function handleUndoPaid(payment: PaymentWithStatus) {
+    const { data } = await supabase
+      .from("payment_history")
+      .select("*")
+      .eq("payment_id", payment.id)
+      .order("paid_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(2);
+
+    const history = (data ?? []) as PaymentHistory[];
+    const latest = history[0];
+    const previous = history[1];
+
+    if (latest) {
+      await supabase.from("payment_history").delete().eq("id", latest.id);
+    }
+
+    await supabase
+      .from("payments")
+      .update({
+        last_paid_date: previous?.paid_date ?? null,
+        last_paid_amount: previous?.amount ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", payment.id);
+
+    await fetchPayments();
+  }
+
   async function handleTogglePaused(id: string, isPaused: boolean) {
     await supabase
       .from("payments")
@@ -356,6 +385,7 @@ export function Dashboard() {
                       onMarkPaid={handleMarkPaid}
                       onLoadHistory={handleLoadHistory}
                       onAddHistory={handleAddHistory}
+                      onUndoPaid={handleUndoPaid}
                       onTogglePaused={handleTogglePaused}
                       onDelete={handleDelete}
                     />
@@ -383,6 +413,7 @@ export function Dashboard() {
                       onMarkPaid={handleMarkPaid}
                       onLoadHistory={handleLoadHistory}
                       onAddHistory={handleAddHistory}
+                      onUndoPaid={handleUndoPaid}
                       onTogglePaused={handleTogglePaused}
                       onDelete={handleDelete}
                     />
@@ -415,6 +446,7 @@ export function Dashboard() {
                         onMarkPaid={handleMarkPaid}
                         onLoadHistory={handleLoadHistory}
                         onAddHistory={handleAddHistory}
+                        onUndoPaid={handleUndoPaid}
                         onTogglePaused={handleTogglePaused}
                         onDelete={handleDelete}
                       />
@@ -448,6 +480,7 @@ export function Dashboard() {
                         onMarkPaid={handleMarkPaid}
                         onLoadHistory={handleLoadHistory}
                         onAddHistory={handleAddHistory}
+                        onUndoPaid={handleUndoPaid}
                         onTogglePaused={handleTogglePaused}
                         onDelete={handleDelete}
                       />
@@ -481,6 +514,7 @@ export function Dashboard() {
                         onMarkPaid={handleMarkPaid}
                         onLoadHistory={handleLoadHistory}
                         onAddHistory={handleAddHistory}
+                        onUndoPaid={handleUndoPaid}
                         onTogglePaused={handleTogglePaused}
                         onDelete={handleDelete}
                       />

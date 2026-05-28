@@ -50,6 +50,7 @@ import {
   Loader2,
   PauseCircle,
   PlayCircle,
+  Undo2,
 } from "lucide-react";
 
 interface PaymentCardProps {
@@ -62,6 +63,7 @@ interface PaymentCardProps {
     paidDate: string,
     amount: number | null
   ) => Promise<PaymentHistory[]>;
+  onUndoPaid: (payment: PaymentWithStatus) => Promise<void>;
   onTogglePaused: (id: string, isPaused: boolean) => Promise<void>;
   onDelete: (id: string) => void;
 }
@@ -72,10 +74,12 @@ export function PaymentCard({
   onMarkPaid,
   onLoadHistory,
   onAddHistory,
+  onUndoPaid,
   onTogglePaused,
   onDelete,
 }: PaymentCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [undoPaidConfirmOpen, setUndoPaidConfirmOpen] = useState(false);
   const [paidDialogOpen, setPaidDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [historyItems, setHistoryItems] = useState<PaymentHistory[]>([]);
@@ -240,6 +244,12 @@ export function PaymentCard({
               <History className="w-4 h-4" />
               Ver detalles
             </DropdownMenuItem>
+            {isPaid && (
+              <DropdownMenuItem onClick={() => setUndoPaidConfirmOpen(true)}>
+                <Undo2 className="w-4 h-4" />
+                Deshacer pago
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => onTogglePaused(payment.id, isPaused)}>
               {isPaused ? (
                 <PlayCircle className="w-4 h-4" />
@@ -456,6 +466,25 @@ export function PaymentCard({
               className="bg-destructive text-white hover:bg-destructive/90"
             >
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={undoPaidConfirmOpen} onOpenChange={setUndoPaidConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Deshacer este pago?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se quitará el último pago registrado de{" "}
+              <span className="font-medium text-foreground">{payment.name}</span>{" "}
+              y el recordatorio volverá a calcularse.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => onUndoPaid(payment)}>
+              Deshacer pago
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
