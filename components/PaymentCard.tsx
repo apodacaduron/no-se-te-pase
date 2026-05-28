@@ -139,7 +139,7 @@ export function PaymentCard({
   }
 
   function formatMoney(amount: number | null): string {
-    if (amount === null) return "Sin monto";
+    if (typeof amount !== "number") return "Sin monto";
     return `$${amount.toLocaleString("es-MX", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -153,7 +153,7 @@ export function PaymentCard({
       if (payment.last_paid_date) {
         const d = new Date(payment.last_paid_date + "T00:00:00");
         const amount =
-          payment.last_paid_amount !== null
+          typeof payment.last_paid_amount === "number"
             ? ` · $${payment.last_paid_amount.toLocaleString("es-MX", { minimumFractionDigits: 0 })}`
             : "";
         return `Pagado el ${d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}${amount}`;

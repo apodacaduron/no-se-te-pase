@@ -56,7 +56,7 @@ export function PaymentSummaryDialog({
       const paidDate = new Date(item.paid_date + "T00:00:00");
       return !start || paidDate >= start;
     });
-    const withAmount = filtered.filter((item) => item.amount !== null);
+    const withAmount = filtered.filter((item) => typeof item.amount === "number");
     const total = withAmount.reduce((sum, item) => sum + (item.amount ?? 0), 0);
     const average = withAmount.length > 0 ? total / withAmount.length : 0;
     const missingAmount = filtered.length - withAmount.length;
@@ -69,7 +69,7 @@ export function PaymentSummaryDialog({
           amount: 0,
           count: 0,
         };
-        previous.amount += item.amount ?? 0;
+        previous.amount += typeof item.amount === "number" ? item.amount : 0;
         previous.count += 1;
         acc.set(item.payment_id, previous);
         return acc;
@@ -241,7 +241,7 @@ function buildBuckets(
   const buckets = new Map<string, { key: string; label: string; amount: number }>();
 
   for (const item of history) {
-    if (item.amount === null) continue;
+    if (typeof item.amount !== "number") continue;
     const paidDate = new Date(item.paid_date + "T00:00:00");
     const key = getBucketKey(paidDate, mode);
     const label = getBucketLabel(paidDate, mode);
