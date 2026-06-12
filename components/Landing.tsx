@@ -9,8 +9,8 @@ const MOCK_PAYMENTS = [
     id: 1,
     name: "BBVA Azul",
     category: "Tarjeta",
-    latest: "Último pago: 28 may",
-    dot: "bg-emerald-500",
+    latest: "Último pago: este mes",
+    paidThisMonth: true,
     badge: "bg-violet-100 text-violet-700",
     amount: "$3,200",
   },
@@ -19,7 +19,7 @@ const MOCK_PAYMENTS = [
     name: "CFE",
     category: "Bimestral",
     latest: "Sin pagos registrados",
-    dot: "bg-slate-300",
+    paidThisMonth: false,
     badge: "bg-cyan-100 text-cyan-700",
     amount: "$680",
   },
@@ -27,8 +27,8 @@ const MOCK_PAYMENTS = [
     id: 3,
     name: "Seguro de auto",
     category: "Anual",
-    latest: "Último pago: 12 jul",
-    dot: "bg-emerald-500",
+    latest: "Último pago: hace meses",
+    paidThisMonth: false,
     badge: "bg-blue-100 text-blue-700",
     amount: "$8,400",
   },
@@ -36,8 +36,8 @@ const MOCK_PAYMENTS = [
     id: 4,
     name: "JMAS Agua",
     category: "Bimestral",
-    latest: "Último pago: 3 jun",
-    dot: "bg-emerald-500",
+    latest: "Último pago: este mes",
+    paidThisMonth: true,
     badge: "bg-cyan-100 text-cyan-700",
     amount: "$180",
   },
@@ -137,7 +137,11 @@ export function Landing({ onSignIn, signingIn }: LandingProps) {
               return (
                 <div
                   key={p.id}
-                  className="rounded-xl border bg-card px-2.5 py-2 min-h-23"
+                  className={`rounded-xl border px-2.5 py-2 min-h-25 ${
+                    p.paidThisMonth
+                      ? "border-emerald-200 bg-emerald-50/70"
+                      : "bg-card"
+                  }`}
                   style={{
                     transition: "opacity 0.35s, transform 0.35s",
                     opacity: show ? 1 : 0,
@@ -146,7 +150,11 @@ export function Landing({ onSignIn, signingIn }: LandingProps) {
                   }}
                 >
                   <div className="flex items-start gap-2 min-w-0">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.dot}`} />
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        p.paidThisMonth ? "bg-emerald-500" : "bg-slate-300"
+                      }`}
+                    />
                     <div className="min-w-0">
                       <p className="text-xs font-medium truncate">{p.name}</p>
                       <div className="flex items-center gap-1 mt-0.5">
@@ -160,6 +168,11 @@ export function Landing({ onSignIn, signingIn }: LandingProps) {
                   <p className="text-[11px] leading-snug text-muted-foreground mt-2">
                     {p.latest}
                   </p>
+                  {p.paidThisMonth && (
+                    <p className="inline-flex rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 mt-1.5">
+                      Pagado este mes
+                    </p>
+                  )}
                   <div className="flex items-center gap-1.5 mt-2">
                     <span className="h-5 px-1.5 rounded-md border text-[10px] font-medium flex items-center">
                       Historial

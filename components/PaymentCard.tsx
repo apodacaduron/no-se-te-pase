@@ -93,6 +93,18 @@ export function PaymentCard({
   const [addingHistory, setAddingHistory] = useState(false);
   const isPaused = payment.status === "paused";
 
+  function wasPaidThisMonth(): boolean {
+    if (!payment.last_paid_date) return false;
+    const today = new Date();
+    const lastPaid = new Date(payment.last_paid_date + "T00:00:00");
+    return (
+      lastPaid.getFullYear() === today.getFullYear() &&
+      lastPaid.getMonth() === today.getMonth()
+    );
+  }
+
+  const paidThisMonth = !isPaused && wasPaidThisMonth();
+
   async function handlePaidSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMarkingPaid(true);
@@ -168,6 +180,8 @@ export function PaymentCard({
   const plannedPaymentLabel = formatPlannedPaymentLabel();
   const cardClass = isPaused
     ? "border-border bg-muted/40 opacity-70"
+    : paidThisMonth
+    ? "border-emerald-200 bg-emerald-50/70 shadow-sm shadow-emerald-100 hover:shadow-md transition-shadow"
     : "border-border bg-card shadow-sm hover:shadow-md transition-shadow";
 
   return (
@@ -177,7 +191,7 @@ export function PaymentCard({
         <div className="flex items-start gap-2.5 min-w-0">
           {isPaused ? (
             <PauseCircle className="w-4 h-4 mt-0.5 shrink-0 text-slate-400" />
-          ) : payment.last_paid_date ? (
+          ) : paidThisMonth ? (
             <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
           ) : (
             <CreditCard className="w-4 h-4 mt-0.5 shrink-0 text-slate-400" />
@@ -273,6 +287,11 @@ export function PaymentCard({
         {plannedPaymentLabel && (
           <p className="text-xs text-muted-foreground">
             {plannedPaymentLabel}
+          </p>
+        )}
+        {paidThisMonth && (
+          <p className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+            Pagado este mes
           </p>
         )}
         <div className="flex flex-wrap items-center gap-2">
