@@ -39,8 +39,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   CheckCircle2,
-  AlertCircle,
-  Clock,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -93,14 +91,7 @@ export function PaymentCard({
   );
   const [markingPaid, setMarkingPaid] = useState(false);
   const [addingHistory, setAddingHistory] = useState(false);
-  const isPaid = payment.status === "paid";
   const isPaused = payment.status === "paused";
-  const isOverdue = payment.status === "overdue";
-  const isUrgent =
-    !isPaid &&
-    !isPaused &&
-    (payment.requires_attention ||
-      (payment.days_until_due !== null && payment.days_until_due <= 7));
 
   async function handlePaidSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -150,82 +141,48 @@ export function PaymentCard({
     })}`;
   }
 
-  function formatDueLabel(): string {
-    if (isPaused) return "Pausado";
-    if (!payment.computed_next_due) return "Sin fecha";
-    if (isPaid) {
-      if (payment.last_paid_date) {
-        const d = new Date(payment.last_paid_date + "T00:00:00");
-        const amount =
-          typeof payment.last_paid_amount === "number"
-            ? ` · $${payment.last_paid_amount.toLocaleString("es-MX", { minimumFractionDigits: 0 })}`
-            : "";
-        return `Pagado el ${d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}${amount}`;
-      }
-      return "Pagado";
-    }
-    if (isOverdue) {
-      const abs = Math.abs(payment.days_until_due!);
-      return abs === 1 ? "Venció ayer" : `Venció hace ${abs} días`;
-    }
-    if (payment.days_until_due === 0) return "Vence hoy";
-    if (payment.days_until_due === 1) return "Vence mañana";
-    if (payment.days_until_due !== null && payment.days_until_due <= 7)
-      return `Vence en ${payment.days_until_due} días`;
-    const d = new Date(payment.computed_next_due + "T00:00:00");
-    if (payment.requires_attention) {
-      return `Corte listo · vence el ${d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
-    }
-    const prefix = payment.is_approximate ? "~" : "Vence el ";
-    return `${prefix}${d.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
+  function formatLatestPaymentLabel(): string {
+    if (!payment.last_paid_date) return "Sin pagos registrados";
+    const d = new Date(payment.last_paid_date + "T00:00:00");
+    const amount =
+      typeof payment.last_paid_amount === "number"
+        ? ` · $${payment.last_paid_amount.toLocaleString("es-MX", { minimumFractionDigits: 0 })}`
+        : "";
+    return `Último pago: ${d.toLocaleDateString("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })}${amount}`;
   }
 
-  // Card container styles
-  const cardClass = isOverdue
-    ? "border-red-200 bg-red-50/70 shadow-sm shadow-red-100"
-    : isUrgent
-    ? "border-amber-200 bg-amber-50/80 shadow-sm shadow-amber-100"
-    : isPaused
+  function formatPlannedPaymentLabel(): string | null {
+    if (!payment.computed_next_due) return null;
+    const d = new Date(payment.computed_next_due + "T00:00:00");
+    const prefix = payment.is_approximate ? "Fecha aprox." : "Referencia";
+    return `${prefix}: ${d.toLocaleDateString("es-MX", {
+      day: "numeric",
+      month: "short",
+    })}`;
+  }
+
+  const plannedPaymentLabel = formatPlannedPaymentLabel();
+  const cardClass = isPaused
     ? "border-border bg-muted/40 opacity-70"
-    : isPaid
-    ? "border-border bg-card opacity-60"
     : "border-border bg-card shadow-sm hover:shadow-md transition-shadow";
 
-  const StatusIcon = isPaid
-    ? CheckCircle2
-    : isPaused
-    ? PauseCircle
-    : isOverdue
-    ? AlertCircle
-    : Clock;
-
-  const iconClass = isPaid
-    ? "text-emerald-400"
-    : isPaused
-    ? "text-slate-400"
-    : isOverdue
-    ? "text-red-500"
-    : isUrgent
-    ? "text-amber-500"
-    : "text-slate-400";
-
-  const dueClass = isPaid
-    ? "text-emerald-600 font-medium"
-    : isPaused
-    ? "text-muted-foreground font-medium"
-    : isOverdue
-    ? "text-red-600 font-semibold"
-    : isUrgent
-    ? "text-amber-600 font-semibold"
-    : "text-muted-foreground";
-
   return (
-    <div className={`rounded-2xl border p-4 transition-all ${cardClass}`}>
+    <div className={`rounded-xl border p-4 transition-all ${cardClass}`}>
       {/* Top row: icon + name + menu */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2.5 min-w-0">
-          <StatusIcon className={`w-4 h-4 mt-0.5 shrink-0 ${iconClass}`} />
-          <p className={`font-semibold text-sm leading-tight truncate ${isPaid ? "text-muted-foreground" : "text-foreground"}`}>
+          {isPaused ? (
+            <PauseCircle className="w-4 h-4 mt-0.5 shrink-0 text-slate-400" />
+          ) : payment.last_paid_date ? (
+            <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+          ) : (
+            <CreditCard className="w-4 h-4 mt-0.5 shrink-0 text-slate-400" />
+          )}
+          <p className="font-semibold text-sm leading-tight truncate text-foreground">
             {payment.name}
           </p>
         </div>
@@ -242,12 +199,12 @@ export function PaymentCard({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleOpenHistory}>
               <History className="w-4 h-4" />
-              Ver detalles
+              Ver historial
             </DropdownMenuItem>
-            {isPaid && (
+            {payment.last_paid_date && (
               <DropdownMenuItem onClick={() => setUndoPaidConfirmOpen(true)}>
                 <Undo2 className="w-4 h-4" />
-                Deshacer pago
+                Quitar último pago
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => onTogglePaused(payment.id, isPaused)}>
@@ -304,29 +261,48 @@ export function PaymentCard({
         </p>
       )}
 
-      {/* Bottom row: due date + mark paid */}
-      <div className="flex items-center justify-between mt-3 ml-6">
-        <span className={`text-sm ${dueClass}`}>
-          {formatDueLabel()}
-        </span>
-        {!isPaid && !isPaused && (
+      {/* Bottom row: latest payment + actions */}
+      <div className="mt-4 ml-6 space-y-3">
+        <button
+          type="button"
+          onClick={handleOpenHistory}
+          className="block w-full text-left text-sm text-foreground hover:text-primary transition-colors"
+        >
+          {formatLatestPaymentLabel()}
+        </button>
+        {plannedPaymentLabel && (
+          <p className="text-xs text-muted-foreground">
+            {plannedPaymentLabel}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setPaidDialogOpen(true)}
-            className="h-7 text-xs gap-1.5 px-2.5 rounded-full bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-800 font-medium"
+            onClick={handleOpenHistory}
+            className="h-7 text-xs gap-1.5 px-2.5 rounded-full"
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Marcar pagado
+            <History className="w-3.5 h-3.5" />
+            Historial
           </Button>
-        )}
+          {!isPaused && (
+            <Button
+              size="sm"
+              onClick={() => setPaidDialogOpen(true)}
+              className="h-7 text-xs gap-1.5 px-2.5 rounded-full font-medium"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Agregar pago
+            </Button>
+          )}
+        </div>
       </div>
 
       <Dialog open={paidDialogOpen} onOpenChange={(open) => !markingPaid && setPaidDialogOpen(open)}>
         <DialogContent className="sm:max-w-sm">
           <form onSubmit={handlePaidSubmit}>
             <DialogHeader>
-              <DialogTitle>Marcar como pagado</DialogTitle>
+              <DialogTitle>Agregar pago</DialogTitle>
               <DialogDescription>
                 Registra el pago de {payment.name}. El monto es opcional.
               </DialogDescription>
@@ -359,7 +335,7 @@ export function PaymentCard({
                 Cancelar
               </Button>
               <Button type="submit" disabled={markingPaid}>
-                {markingPaid ? "Guardando…" : "Marcar pagado"}
+                {markingPaid ? "Guardando…" : "Agregar pago"}
               </Button>
             </DialogFooter>
           </form>
@@ -369,7 +345,7 @@ export function PaymentCard({
       <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Detalles de pagos</DialogTitle>
+            <DialogTitle>Historial de pagos</DialogTitle>
             <DialogDescription>
               Historial registrado para {payment.name}.
             </DialogDescription>
@@ -474,17 +450,17 @@ export function PaymentCard({
       <AlertDialog open={undoPaidConfirmOpen} onOpenChange={setUndoPaidConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Deshacer este pago?</AlertDialogTitle>
+            <AlertDialogTitle>¿Quitar el último pago?</AlertDialogTitle>
             <AlertDialogDescription>
               Se quitará el último pago registrado de{" "}
               <span className="font-medium text-foreground">{payment.name}</span>{" "}
-              y el recordatorio volverá a calcularse.
+              y se actualizará la fecha del último pago.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={() => onUndoPaid(payment)}>
-              Deshacer pago
+              Quitar pago
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -9,9 +9,8 @@ const MOCK_PAYMENTS = [
     id: 1,
     name: "BBVA Azul",
     category: "Tarjeta",
-    due: "Vence el 4 jun",
-    status: "urgent",
-    dot: "bg-amber-400",
+    latest: "Último pago: 28 may",
+    dot: "bg-emerald-500",
     badge: "bg-violet-100 text-violet-700",
     amount: "$3,200",
   },
@@ -19,9 +18,8 @@ const MOCK_PAYMENTS = [
     id: 2,
     name: "CFE",
     category: "Bimestral",
-    due: "~25 jun",
-    status: "upcoming",
-    dot: "bg-emerald-400",
+    latest: "Sin pagos registrados",
+    dot: "bg-slate-300",
     badge: "bg-cyan-100 text-cyan-700",
     amount: "$680",
   },
@@ -29,9 +27,8 @@ const MOCK_PAYMENTS = [
     id: 3,
     name: "Seguro de auto",
     category: "Anual",
-    due: "12 jul",
-    status: "upcoming",
-    dot: "bg-emerald-400",
+    latest: "Último pago: 12 jul",
+    dot: "bg-emerald-500",
     badge: "bg-blue-100 text-blue-700",
     amount: "$8,400",
   },
@@ -39,18 +36,17 @@ const MOCK_PAYMENTS = [
     id: 4,
     name: "JMAS Agua",
     category: "Bimestral",
-    due: "Pagado",
-    status: "paid",
-    dot: "bg-zinc-300",
+    latest: "Último pago: 3 jun",
+    dot: "bg-emerald-500",
     badge: "bg-cyan-100 text-cyan-700",
     amount: "$180",
   },
 ];
 
 const FEATURES = [
-  { emoji: "💳", text: "Día de corte y límite de tus tarjetas" },
-  { emoji: "🔁", text: "Agua, luz, gas — se recalculan solos" },
-  { emoji: "📅", text: "Seguros y pagos anuales sin sorpresas" },
+  { emoji: "🧾", text: "Ten claro qué cosas pagas" },
+  { emoji: "✅", text: "Registra cada pago cuando lo hagas" },
+  { emoji: "📚", text: "Consulta el historial de cada cosa" },
 ];
 
 interface LandingProps {
@@ -101,7 +97,7 @@ export function Landing({ onSignIn, signingIn }: LandingProps) {
         <div className="text-4xl mb-2">🔔</div>
         <h1 className="text-2xl font-bold tracking-tight">No se te pase</h1>
         <p className="text-muted-foreground text-sm max-w-[26ch] leading-relaxed">
-          Todos tus pagos y fechas de vencimiento en un solo lugar.
+          Recuerda qué cosas pagas y cuándo fue la última vez.
         </p>
       </div>
 
@@ -122,34 +118,34 @@ export function Landing({ onSignIn, signingIn }: LandingProps) {
           </div>
 
           {/* Section label */}
-          <div className="px-3 pt-3 pb-1 flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Próximos pagos
-            </span>
-            <span className="bg-destructive text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
-              1
-            </span>
+          <div className="px-3 pt-3 pb-1 flex items-center justify-between gap-2">
+            <div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Cosas que pago
+              </span>
+              <p className="text-[11px] text-muted-foreground mt-0.5">4 recordatorios</p>
+            </div>
+            <div className="h-6 px-2 rounded-lg bg-primary text-primary-foreground text-[11px] font-medium flex items-center">
+              Agregar
+            </div>
           </div>
 
           {/* Cards */}
-          <div className="px-2.5 pb-3 space-y-1.5 min-h-38">
+          <div className="grid grid-cols-2 gap-1.5 px-2.5 pb-3 min-h-38">
             {MOCK_PAYMENTS.map((p, i) => {
               const show = i < visibleCards;
               return (
                 <div
                   key={p.id}
-                  className={`rounded-xl border px-2.5 py-2 flex items-center justify-between gap-2
-                    ${p.status === "urgent" ? "border-amber-200 bg-amber-50/60" : "bg-card"}
-                    ${p.status === "urgent" && show ? "animate-pulse-subtle" : ""}
-                  `}
+                  className="rounded-xl border bg-card px-2.5 py-2 min-h-23"
                   style={{
                     transition: "opacity 0.35s, transform 0.35s",
-                    opacity: show ? (p.status === "paid" ? 0.4 : 1) : 0,
+                    opacity: show ? 1 : 0,
                     transform: show ? "translateY(0) scale(1)" : "translateY(8px) scale(0.98)",
                     pointerEvents: show ? "auto" : "none",
                   }}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-start gap-2 min-w-0">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.dot}`} />
                     <div className="min-w-0">
                       <p className="text-xs font-medium truncate">{p.name}</p>
@@ -161,13 +157,17 @@ export function Landing({ onSignIn, signingIn }: LandingProps) {
                       </div>
                     </div>
                   </div>
-                  <span className={`text-xs font-medium whitespace-nowrap shrink-0 ${
-                    p.status === "urgent" ? "text-amber-600" :
-                    p.status === "paid"   ? "text-emerald-600" :
-                    "text-muted-foreground"
-                  }`}>
-                    {p.due}
-                  </span>
+                  <p className="text-[11px] leading-snug text-muted-foreground mt-2">
+                    {p.latest}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <span className="h-5 px-1.5 rounded-md border text-[10px] font-medium flex items-center">
+                      Historial
+                    </span>
+                    <span className="h-5 px-1.5 rounded-md bg-primary text-primary-foreground text-[10px] font-medium flex items-center">
+                      Pago
+                    </span>
+                  </div>
                 </div>
               );
             })}

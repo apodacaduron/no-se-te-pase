@@ -66,7 +66,11 @@ export function PaymentSheet({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
       setForm(
         payment
           ? {
@@ -87,7 +91,11 @@ export function PaymentSheet({
             }
           : EMPTY
       );
-    }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [payment, open]);
 
   function set<K extends keyof PaymentFormData>(key: K, value: PaymentFormData[K]) {
@@ -204,7 +212,10 @@ export function PaymentSheet({
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="cutoff">Día de corte</Label>
+                  <Label htmlFor="cutoff">
+                    Día de corte{" "}
+                    <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </Label>
                   <Input
                     id="cutoff"
                     type="number"
@@ -218,7 +229,10 @@ export function PaymentSheet({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="due">Día límite de pago</Label>
+                  <Label htmlFor="due">
+                    Día límite de pago{" "}
+                    <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </Label>
                   <Input
                     id="due"
                     type="number"
@@ -247,10 +261,12 @@ export function PaymentSheet({
           ) : useDayInput ? (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="due-day">Día de vencimiento</Label>
+                <Label htmlFor="due-day">
+                  Día de referencia{" "}
+                  <span className="text-muted-foreground font-normal">(opcional)</span>
+                </Label>
                 <Input
                   id="due-day"
-                  required
                   type="number"
                   min="1"
                   max="31"
@@ -276,10 +292,12 @@ export function PaymentSheet({
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="next-due">Próxima fecha de pago</Label>
+              <Label htmlFor="next-due">
+                Fecha de referencia{" "}
+                <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
               <Input
                 id="next-due"
-                required
                 type="date"
                 value={form.next_due_date ?? ""}
                 onChange={(e) => set("next_due_date", e.target.value || null)}

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Payment, PaymentHistory, PaymentWithStatus } from "@/lib/types";
-import { computePaymentStatus, sortPayments } from "@/lib/payments";
+import { computePaymentStatus } from "@/lib/payments";
 import { PaymentCard } from "./PaymentCard";
 import { PaymentSummaryDialog } from "./PaymentSummaryDialog";
 import { PaymentSheet } from "./PaymentSheet";
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { Plus, LogOut, Heart, Loader2, ChevronDown, BarChart3 } from "lucide-react";
+import { Plus, LogOut, Heart, Loader2, BarChart3 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 type PaymentFormData = Omit<Payment, "id" | "user_id" | "created_at" | "updated_at">;
@@ -89,7 +89,10 @@ export function Dashboard() {
   }, [user, supabase]);
 
   useEffect(() => {
-    if (user) fetchPayments();
+    if (!user) return;
+    queueMicrotask(() => {
+      void fetchPayments();
+    });
   }, [user, fetchPayments]);
 
   async function handleSave(formData: PaymentFormData, id?: string) {
@@ -231,11 +234,12 @@ export function Dashboard() {
     setSheetOpen(true);
   }
 
-  const { urgent, upcoming, later, paid, paused } = sortPayments(payments);
-  const [laterOpen, setLaterOpen] = useState(false);
-  const [paidOpen, setPaidOpen] = useState(false);
-  const [pausedOpen, setPausedOpen] = useState(false);
-  const overdueCount = payments.filter((p) => p.status === "overdue").length;
+  const activePayments = payments
+    .filter((p) => p.status !== "paused")
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+  const pausedPayments = payments
+    .filter((p) => p.status === "paused")
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
   // ── Render ────────────────────────────────────────────
   if (!authLoading && !user) {
@@ -289,11 +293,6 @@ export function Dashboard() {
           <div className="flex items-center gap-2">
             <span className="text-xl leading-none">🔔</span>
             <span className="font-semibold text-sm">No se te pase</span>
-            {overdueCount > 0 && (
-              <span className="bg-destructive text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
-                {overdueCount}
-              </span>
-            )}
           </div>
 
           {/* Actions */}
@@ -332,7 +331,7 @@ export function Dashboard() {
       </header>
 
       {/* ── Body ── */}
-      <main className="max-w-2xl mx-auto px-4 py-6 pb-24 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 space-y-6">
         {authLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -348,7 +347,7 @@ export function Dashboard() {
             <div className="space-y-1.5">
               <p className="font-semibold text-base">Todo tranquilo por aquí</p>
               <p className="text-sm text-muted-foreground max-w-[26ch] mx-auto leading-relaxed">
-                Agrega tus tarjetas, servicios y suscripciones para que no se te pase ningún pago.
+                Agrega tus tarjetas, servicios y suscripciones para tener claro qué cosas pagas.
               </p>
             </div>
             <Button onClick={handleAdd} className="gap-2 rounded-xl">
@@ -366,46 +365,50 @@ export function Dashboard() {
           </div>
         ) : (
           <>
-            {urgent.length > 0 && (
-              <section className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-bold text-red-500 uppercase tracking-widest">
-                    Atención requerida
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    Cosas que pago
                   </p>
-                  <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
-                    {urgent.length}
-                  </span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {activePayments.length} recordatorio{activePayments.length === 1 ? "" : "s"}
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  {urgent.map((p) => (
-                    <PaymentCard
-                      key={p.id}
-                      payment={p}
-                      onEdit={handleEdit}
-                      onMarkPaid={handleMarkPaid}
-                      onLoadHistory={handleLoadHistory}
-                      onAddHistory={handleAddHistory}
-                      onUndoPaid={handleUndoPaid}
-                      onTogglePaused={handleTogglePaused}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+                <Button onClick={handleAdd} size="sm" className="gap-1.5">
+                  <Plus className="w-3.5 h-3.5" />
+                  Agregar
+                </Button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {activePayments.map((p) => (
+                  <PaymentCard
+                    key={p.id}
+                    payment={p}
+                    onEdit={handleEdit}
+                    onMarkPaid={handleMarkPaid}
+                    onLoadHistory={handleLoadHistory}
+                    onAddHistory={handleAddHistory}
+                    onUndoPaid={handleUndoPaid}
+                    onTogglePaused={handleTogglePaused}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </section>
 
-            {upcoming.length > 0 && (
+            {pausedPayments.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                    Próximos pagos
+                    Pausados
                   </p>
                   <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
-                    {upcoming.length}
+                    {pausedPayments.length}
                   </span>
                 </div>
-                <div className="space-y-2">
-                  {upcoming.map((p) => (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {pausedPayments.map((p) => (
                     <PaymentCard
                       key={p.id}
                       payment={p}
@@ -419,108 +422,6 @@ export function Dashboard() {
                     />
                   ))}
                 </div>
-              </section>
-            )}
-
-            {later.length > 0 && (
-              <section className="space-y-3">
-                <button
-                  onClick={() => setLaterOpen((v) => !v)}
-                  className="flex items-center gap-2 w-full text-left group"
-                >
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
-                    Más adelante
-                  </p>
-                  <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
-                    {later.length}
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ml-auto ${laterOpen ? "rotate-180" : ""}`} />
-                </button>
-                {laterOpen && (
-                  <div className="space-y-2">
-                    {later.map((p) => (
-                      <PaymentCard
-                        key={p.id}
-                        payment={p}
-                        onEdit={handleEdit}
-                        onMarkPaid={handleMarkPaid}
-                        onLoadHistory={handleLoadHistory}
-                        onAddHistory={handleAddHistory}
-                        onUndoPaid={handleUndoPaid}
-                        onTogglePaused={handleTogglePaused}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {paid.length > 0 && (
-              <section className="space-y-3">
-                <button
-                  onClick={() => setPaidOpen((v) => !v)}
-                  className="flex items-center gap-2 w-full text-left group"
-                >
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
-                    Pagados este ciclo
-                  </p>
-                  <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
-                    {paid.length}
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ml-auto ${paidOpen ? "rotate-180" : ""}`} />
-                </button>
-                {paidOpen && (
-                  <div className="space-y-2">
-                    {paid.map((p) => (
-                      <PaymentCard
-                        key={p.id}
-                        payment={p}
-                        onEdit={handleEdit}
-                        onMarkPaid={handleMarkPaid}
-                        onLoadHistory={handleLoadHistory}
-                        onAddHistory={handleAddHistory}
-                        onUndoPaid={handleUndoPaid}
-                        onTogglePaused={handleTogglePaused}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {paused.length > 0 && (
-              <section className="space-y-3">
-                <button
-                  onClick={() => setPausedOpen((v) => !v)}
-                  className="flex items-center gap-2 w-full text-left group"
-                >
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">
-                    Pausados
-                  </p>
-                  <span className="text-xs font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
-                    {paused.length}
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ml-auto ${pausedOpen ? "rotate-180" : ""}`} />
-                </button>
-                {pausedOpen && (
-                  <div className="space-y-2">
-                    {paused.map((p) => (
-                      <PaymentCard
-                        key={p.id}
-                        payment={p}
-                        onEdit={handleEdit}
-                        onMarkPaid={handleMarkPaid}
-                        onLoadHistory={handleLoadHistory}
-                        onAddHistory={handleAddHistory}
-                        onUndoPaid={handleUndoPaid}
-                        onTogglePaused={handleTogglePaused}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </div>
-                )}
               </section>
             )}
           </>
